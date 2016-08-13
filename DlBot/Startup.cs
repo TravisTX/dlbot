@@ -41,6 +41,7 @@ namespace DlBot
         {
             services.Configure<SettingsModel>(options => Configuration.Bind(options));
             services.AddSingleton<SlackService, SlackService>();
+            services.AddTransient<SprintCalculatingService, SprintCalculatingService>();
 
             services.AddMvc();
         }
