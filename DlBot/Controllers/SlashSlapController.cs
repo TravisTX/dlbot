@@ -28,10 +28,10 @@ namespace DlBot.Controllers
             var inUserId = Request.Form["user_id"][0];
             var inUserName = Request.Form["user_name"][0];
             Serilog.Log.Information($"{inCommand} {inText} requested by {inUserName}");
+            var validUser = await _slackService.IsValidUsername(inText);
 
-            if (inText.Trim().Length == 0)
+            if (!validUser)
             {
-                // error
                 string msg = "Acceptable parameter is a username";
                 msg += "\n example:";
                 msg += "\n /slap @travis.collins";
