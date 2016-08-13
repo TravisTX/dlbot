@@ -16,7 +16,6 @@ namespace DlBot
 {
     public class Startup
     {
-        private readonly ILogger<Startup> _logger;
         public Startup(IHostingEnvironment env)
         {
             var builder = new ConfigurationBuilder()

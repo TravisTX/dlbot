@@ -25,7 +25,7 @@ namespace DlBot
             var host = new WebHostBuilder()
                 .UseKestrel()
                 .UseContentRoot(Directory.GetCurrentDirectory())
-                .UseUrls("http://*:8462")
+                .UseUrls("http://*:8463")
                 .UseIISIntegration()
                 .UseStartup<Startup>()
                 .Build();
