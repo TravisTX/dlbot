@@ -31,6 +31,12 @@ namespace DlBot.Controllers
             var inResponseUrl = Request.Form["response_url"][0];
             var inUserId = Request.Form["user_id"][0];
             var inUserName = Request.Form["user_name"][0];
+            HandleWork(inCommand, inText, inUserName, inUserId, inResponseUrl);
+            return Ok();
+        }
+
+        private async Task HandleWork(string inCommand, string inText, string inUserName, string inUserId, string inResponseUrl)
+        {
             Serilog.Log.Information($"{inCommand} {inText} requested by {inUserName}");
 
 
@@ -44,7 +50,6 @@ namespace DlBot.Controllers
 
             string slackPostJson = GetSlackPost(workItems, $"{inCommand} {inText}", inUserId);
             await _slackService.PostToSlack(inResponseUrl, slackPostJson);
-            return Ok();
         }
 
         private string GetSlackPost(List<TfsWorkItemModel> workItems, string inCommand, string inUserId)
