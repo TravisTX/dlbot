@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using DlBot.Extensions;
 using DlBot.Services;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
@@ -38,9 +39,14 @@ namespace DlBot.Controllers
                 return Ok(msg);
             }
 
+            Task.Run(() => HandleWork(inText, inUserId, inResponseUrl)).Forget();
+            return Ok();
+        }
+
+        private async Task HandleWork(string inText, string inUserId, string inResponseUrl)
+        {
             string slackPostJson = GetSlackPost(inText, inUserId);
             await _slackService.PostToSlack(inResponseUrl, slackPostJson);
-            return Ok();
         }
 
         private string GetSlackPost(string userToSlap, string inUserId)

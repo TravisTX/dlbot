@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using DlBot.Extensions;
 using DlBot.Models;
 using DlBot.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -24,14 +25,14 @@ namespace DlBot.Controllers
             _tfsService = tfsService;
         }
 
-        public async Task<IActionResult> Post()
+        public IActionResult Post()
         {
             var inCommand = Request.Form["command"][0];
             var inText = Request.Form["text"][0];
             var inResponseUrl = Request.Form["response_url"][0];
             var inUserId = Request.Form["user_id"][0];
             var inUserName = Request.Form["user_name"][0];
-            HandleWork(inCommand, inText, inUserName, inUserId, inResponseUrl);
+            Task.Run(() => HandleWork(inCommand, inText, inUserName, inUserId, inResponseUrl)).Forget();
             return Ok();
         }
 
