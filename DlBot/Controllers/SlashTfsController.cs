@@ -49,11 +49,11 @@ namespace DlBot.Controllers
                 workItems.Add(await _tfsService.GetWorkItem(number));
             }
 
-            string slackPostJson = GetSlackPost(workItems, $"{inCommand} {inText}", inUserId);
+            string slackPostJson = GetSlackPost(workItems, inText, inUserId);
             await _slackService.PostToSlack(inResponseUrl, slackPostJson);
         }
 
-        private string GetSlackPost(List<TfsWorkItemModel> workItems, string inCommand, string inUserId)
+        private string GetSlackPost(List<TfsWorkItemModel> workItems, string inText, string inUserId)
         {
             var message = "";
             foreach (var workItem in workItems)
@@ -65,8 +65,13 @@ namespace DlBot.Controllers
                 }
                 message += $"<{workItem.Links.Html.Href}|{workItemType} {workItem.Id}: {workItem.Fields.Title.Replace("<", "&lt;").Replace(">", "&gt;")}>\n";
             }
+            string note = Regex.Replace(inText, @"^([0-9 ,])*", "", RegexOptions.IgnoreCase | RegexOptions.Multiline);
+            if (!String.IsNullOrWhiteSpace(note))
+            {
+                message += $"{note}\n";
+            }
 
-            var footer = $"{inCommand} triggered by <@{inUserId}>";
+            var footer = $"/tfs triggered by <@{inUserId}>";
             // /tfs 27654 30535
             var slackPost = new
             {
