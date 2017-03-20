@@ -38,6 +38,32 @@ namespace DlBot.Services
             }
         }
 
+        public async Task<SlackUserModel> GetUser(string userid)
+        {
+            using (var client = new HttpClient())
+            {
+                var request = new HttpRequestMessage(HttpMethod.Get, $"https://slack.com/api/users.info?token={_settings.Value.SlackApiKey}&user={userid}");
+                var response = client.SendAsync(request).Result;
+                var responseString = await response.Content.ReadAsStringAsync();
+                var logLevel = response.IsSuccessStatusCode
+                    ? LogEventLevel.Information
+                    : LogEventLevel.Warning;
+                Serilog.Log.Write(logLevel, $"Slack returned code: {(int)response.StatusCode} {response.StatusCode}");
+                Serilog.Log.Write(logLevel, responseString);
+
+                dynamic resultDynamic = JsonConvert.DeserializeObject(responseString);
+
+                var result = new SlackUserModel
+                {
+                    id = resultDynamic.user.id,
+                    name = resultDynamic.user.name,
+                    real_name = resultDynamic.user.real_name,
+                    image_original = resultDynamic.user.profile.image_original
+                };
+                return result;
+            }
+        }
+
         public async Task<List<SlackUserModel>> GetListOfUsers()
         {
             if (_slackUserList == null)
@@ -76,5 +102,39 @@ namespace DlBot.Services
             var users = await GetListOfUsers();
             return users.Any(x => string.Equals(x.name, username, StringComparison.CurrentCultureIgnoreCase));
         }
+
+        public async Task PostWebhookMessage(SlackWebhookMessageModel dto)
+        {
+            var payload = new SlackWebhookPayload
+            {
+                Channel = dto.Channel,
+                IconUrl = dto.IconUrl,
+                Username = dto.Username,
+                Attachments = new List<SlackWebhookAttachment>
+                {
+                    new SlackWebhookAttachment
+                    {
+                        Color = dto.Color,
+                        Text = dto.Text
+                    }
+                }
+            };
+            string payloadJson = JsonConvert.SerializeObject(payload);
+
+            using (var client = new HttpClient())
+            {
+                var content = new FormUrlEncodedContent(new[]
+                    {
+                        new KeyValuePair<string, string>("payload", payloadJson)
+                    }
+                );
+                var response = client.PostAsync(_settings.Value.SlackWebhookUrl, content).Result;
+                var responseString = await response.Content.ReadAsStringAsync();
+                var logLevel = response.IsSuccessStatusCode ? LogEventLevel.Information : LogEventLevel.Warning;
+                Serilog.Log.Write(logLevel, $"Slack returned code: {(int)response.StatusCode} {response.StatusCode}");
+                Serilog.Log.Write(logLevel, responseString);
+            }
+        }
     }
+
 }

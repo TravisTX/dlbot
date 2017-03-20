@@ -29,16 +29,17 @@ namespace DlBot.Controllers
         {
             var inCommand = Request.Form["command"][0];
             var inText = Request.Form["text"][0];
-            var inResponseUrl = Request.Form["response_url"][0];
             var inUserId = Request.Form["user_id"][0];
             var inUserName = Request.Form["user_name"][0];
-            Task.Run(() => HandleWork(inCommand, inText, inUserName, inUserId, inResponseUrl)).Forget();
-            return Ok();
+            var inChannelId = Request.Form["channel_id"][0];
+            Task.Run(() => HandleWork(inCommand, inText, inChannelId, inUserName, inUserId)).Forget();
+            return Ok("working on it...");
         }
 
-        private async Task HandleWork(string inCommand, string inText, string inUserName, string inUserId, string inResponseUrl)
+        private async Task HandleWork(string inCommand, string inText, string inChannelId, string inUserName, string inUserId)
         {
             Serilog.Log.Information($"{inCommand} {inText} requested by {inUserName}");
+            var slackUser = await _slackService.GetUser(inUserId);
 
 
             var wiNumberMatches = Regex.Matches(inText, @"(\d{4,5})");
@@ -49,11 +50,18 @@ namespace DlBot.Controllers
                 workItems.Add(await _tfsService.GetWorkItem(number));
             }
 
-            string slackPostJson = GetSlackPost(workItems, inText, inUserId);
-            await _slackService.PostToSlack(inResponseUrl, slackPostJson);
+            var slackmessage = GetSlackMessage(workItems, inText);
+            var slackPost = new SlackWebhookMessageModel
+            {
+                Channel = inChannelId,
+                IconUrl = slackUser.image_original,
+                Text = slackmessage,
+                Username = slackUser.real_name
+            };
+            await _slackService.PostWebhookMessage(slackPost);
         }
 
-        private string GetSlackPost(List<TfsWorkItemModel> workItems, string inText, string inUserId)
+        private string GetSlackMessage(List<TfsWorkItemModel> workItems, string inText)
         {
             var message = "";
             foreach (var workItem in workItems)
@@ -71,27 +79,7 @@ namespace DlBot.Controllers
                 message += $"{note}\n";
             }
 
-            var footer = $"/tfs triggered by <@{inUserId}>";
-            // /tfs 27654 30535
-            var slackPost = new
-            {
-                response_type = "in_channel",
-                attachments = new[]
-                {
-                    new
-                    {
-                        fallback = message,
-                        //color = "#0AA6C4",
-                        text = message,
-                        footer = footer,
-                        mrkdwn_in = new[] {"pretext", "text"}
-                    }
-                }
-            };
-
-            var slackPostJson = JsonConvert.SerializeObject(slackPost);
-            return slackPostJson;
+            return message;
         }
-
     }
 }
