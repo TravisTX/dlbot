@@ -58,7 +58,7 @@ namespace DlBot.Services
                     id = resultDynamic.user.id,
                     name = resultDynamic.user.name,
                     real_name = resultDynamic.user.real_name,
-                    image_original = resultDynamic.user.profile.image_original
+                    image_original = resultDynamic.user.profile.image_original ?? resultDynamic.user.profile.image_512
                 };
                 return result;
             }
