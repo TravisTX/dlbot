@@ -1,0 +1,1 @@
+dotnet publish -c Release -r Win10-x64
