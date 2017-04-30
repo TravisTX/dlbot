@@ -42,7 +42,7 @@ namespace DlBot.Services
         {
             using (var client = new HttpClient())
             {
-                var request = new HttpRequestMessage(HttpMethod.Get, $"https://slack.com/api/users.info?token={_settings.Value.SlackApiKey}&user={userid}");
+                var request = new HttpRequestMessage(HttpMethod.Get, $"https://slack.com/api/users.info?token={_settings.Value.SlackAccessToken}&user={userid}");
                 var response = client.SendAsync(request).Result;
                 var responseString = await response.Content.ReadAsStringAsync();
                 var logLevel = response.IsSuccessStatusCode
@@ -71,7 +71,7 @@ namespace DlBot.Services
                 // todo: figure out how to lock with async code.
                 using (var client = new HttpClient())
                 {
-                    var request = new HttpRequestMessage(HttpMethod.Get, $"https://slack.com/api/users.list?token={_settings.Value.SlackApiKey}");
+                    var request = new HttpRequestMessage(HttpMethod.Get, $"https://slack.com/api/users.list?token={_settings.Value.SlackAccessToken}");
                     var response = client.SendAsync(request).Result;
                     var responseString = await response.Content.ReadAsStringAsync();
                     var logLevel = response.IsSuccessStatusCode
@@ -91,7 +91,7 @@ namespace DlBot.Services
         {
             using (var client = new HttpClient())
             {
-                var request = new HttpRequestMessage(HttpMethod.Get, $"https://slack.com/api/users.info?token={_settings.Value.SlackApiKey}&user={userId}");
+                var request = new HttpRequestMessage(HttpMethod.Get, $"https://slack.com/api/users.info?token={_settings.Value.SlackAccessToken}&user={userId}");
                 var response = await client.SendAsync(request);
                 var responseString = await response.Content.ReadAsStringAsync();
                 var logLevel = response.IsSuccessStatusCode
@@ -114,7 +114,7 @@ namespace DlBot.Services
                     status_emoji = emoji
                 });
 
-                var request = new HttpRequestMessage(HttpMethod.Post, $"https://slack.com/api/users.profile.set?token={_settings.Value.SlackSlashStatusToken}&user={userId}&profile={System.Net.WebUtility.UrlEncode(profileStatus)}");
+                var request = new HttpRequestMessage(HttpMethod.Post, $"https://slack.com/api/users.profile.set?token={_settings.Value.SlackAccessToken}&user={userId}&profile={System.Net.WebUtility.UrlEncode(profileStatus)}");
                 var response = await client.SendAsync(request);
                 var responseString = await response.Content.ReadAsStringAsync();
                 var logLevel = response.IsSuccessStatusCode

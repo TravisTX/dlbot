@@ -34,7 +34,7 @@ namespace DlBot.Controllers
             if (status == "back")
             {
                 _slackService.SetUserStatus(inUserId, "", "");
-                return Ok();
+                return Ok(":white_check_mark: You are now marked as *back*");
             }
 
             string emoji;
@@ -59,14 +59,14 @@ namespace DlBot.Controllers
                 if (user.user.profile.status_emoji == emoji)
                 {
                     _slackService.SetUserStatus(inUserId, "", "");
-                    return Ok();
+                    return Ok(":white_check_mark: You are now marked as *back*");
                 }
             }
 
-            inText = string.IsNullOrWhiteSpace(inText) ? DateTime.Now.ToString("h:mm tt") : $"{inText} - {DateTime.Now:h:mm tt}";
-            _slackService.SetUserStatus(inUserId, emoji, inText);
+            var statusMessage = string.IsNullOrWhiteSpace(inText) ? DateTime.Now.ToString("h:mm tt") : $"{inText} - {DateTime.Now:h:mm tt}";
+            _slackService.SetUserStatus(inUserId, emoji, statusMessage);
 
-            return Ok();
+            return Ok($":white_check_mark: You are now marked as *{emoji} {statusMessage}*");
         }
     }
 }
