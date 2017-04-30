@@ -87,6 +87,44 @@ namespace DlBot.Services
             return _slackUserList.members;
         }
 
+        public async Task<SlackUserInfoModel> GetUserInfo(string userId)
+        {
+            using (var client = new HttpClient())
+            {
+                var request = new HttpRequestMessage(HttpMethod.Get, $"https://slack.com/api/users.info?token={_settings.Value.SlackApiKey}&user={userId}");
+                var response = await client.SendAsync(request);
+                var responseString = await response.Content.ReadAsStringAsync();
+                var logLevel = response.IsSuccessStatusCode
+                    ? LogEventLevel.Information
+                    : LogEventLevel.Warning;
+                Serilog.Log.Write(logLevel, $"Slack returned code: {(int)response.StatusCode} {response.StatusCode}");
+                Serilog.Log.Write(logLevel, responseString);
+
+                var result = JsonConvert.DeserializeObject<SlackUserInfoModel>(responseString);
+                return result;
+            }
+        }
+
+        public async void SetUserStatus(string userId, string emoji, string status)
+        {
+            using (var client = new HttpClient())
+            {
+                var profileStatus = JsonConvert.SerializeObject(new {
+                    status_text = status,
+                    status_emoji = emoji
+                });
+
+                var request = new HttpRequestMessage(HttpMethod.Post, $"https://slack.com/api/users.profile.set?token={_settings.Value.SlackSlashStatusToken}&user={userId}&profile={System.Net.WebUtility.UrlEncode(profileStatus)}");
+                var response = await client.SendAsync(request);
+                var responseString = await response.Content.ReadAsStringAsync();
+                var logLevel = response.IsSuccessStatusCode
+                    ? LogEventLevel.Information
+                    : LogEventLevel.Warning;
+                Serilog.Log.Write(logLevel, $"Slack returned code: {(int)response.StatusCode} {response.StatusCode}");
+                Serilog.Log.Write(logLevel, responseString);
+            }
+        }
+
         public async Task<bool> IsValidUsername(string username)
         {
             username = username.Trim();
