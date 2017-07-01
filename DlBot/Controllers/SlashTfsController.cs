@@ -50,7 +50,7 @@ namespace DlBot.Controllers
                 workItems.Add(await _tfsService.GetWorkItem(number));
             }
 
-            var slackmessage = GetSlackMessage(workItems, inText);
+            var slackmessage = _tfsService.GetSlackMessage(workItems, inText);
             var slackPost = new SlackWebhookMessageModel
             {
                 Channel = inChannelId,
@@ -59,27 +59,6 @@ namespace DlBot.Controllers
                 Username = slackUser.real_name
             };
             await _slackService.PostWebhookMessage(slackPost);
-        }
-
-        private string GetSlackMessage(List<TfsWorkItemModel> workItems, string inText)
-        {
-            var message = "";
-            foreach (var workItem in workItems)
-            {
-                var workItemType = workItem.Fields.WorkItemType;
-                if (workItemType == "Product Backlog Item")
-                {
-                    workItemType = "PBI";
-                }
-                message += $"<{workItem.Links.Html.Href}|{workItemType} {workItem.Id}: {workItem.Fields.Title.Replace("<", "&lt;").Replace(">", "&gt;")}>\n";
-            }
-            string note = Regex.Replace(inText, @"^([0-9 ,])*", "", RegexOptions.IgnoreCase | RegexOptions.Multiline);
-            if (!String.IsNullOrWhiteSpace(note))
-            {
-                message += $"{note}\n";
-            }
-
-            return message;
         }
     }
 }

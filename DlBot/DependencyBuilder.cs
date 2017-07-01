@@ -17,6 +17,7 @@ namespace DlBot
                 .AddTransient<SprintCalculatingService, SprintCalculatingService>()
                 .AddTransient<TfsService, TfsService>()
                 .AddTransient<Service, Service>()
+                .AddTransient<BotUser, BotUser>()
                 .Configure<SettingsModel>(GetConfiguration());
             return serviceCollection;
         }

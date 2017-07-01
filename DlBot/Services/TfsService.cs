@@ -8,6 +8,7 @@ using DlBot.Models;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Serilog.Events;
+using System.Text.RegularExpressions;
 
 namespace DlBot.Services
 {
@@ -42,6 +43,38 @@ namespace DlBot.Services
                     return null;
                 }
             }
+        }
+
+        public string GetSlackMessage(List<TfsWorkItemModel> workItems, string inText = null)
+        {
+            var message = "";
+            foreach (var workItem in workItems)
+            {
+                try
+                {
+                    var workItemType = workItem.Fields.WorkItemType;
+                    if (workItemType == "Product Backlog Item")
+                    {
+                        workItemType = "PBI";
+                    }
+                    message += $"<{workItem.Links.Html.Href}|{workItemType} {workItem.Id}: {workItem.Fields.Title.Replace("<", "&lt;").Replace(">", "&gt;")}>\n";
+                }
+                catch(Exception ex)
+                {
+                    Serilog.Log.Error(ex, "");
+                }
+            }
+
+            if (!String.IsNullOrWhiteSpace(inText))
+            {
+                string note = Regex.Replace(inText, @"^([0-9 ,])*", "", RegexOptions.IgnoreCase | RegexOptions.Multiline);
+                if (!String.IsNullOrWhiteSpace(note))
+                {
+                    message += $"{note}\n";
+                }
+            }
+
+            return message;
         }
     }
 }

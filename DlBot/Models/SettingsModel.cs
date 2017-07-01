@@ -8,6 +8,7 @@ namespace DlBot.Models
 {
     public class SettingsModel
     {
+        public string SlackBotUserToken { get; set; }
         public string SlackAccessToken { get; set; }
         public string SlackWebhookUrl { get; set; }
         public string TfsUrl { get; set; }

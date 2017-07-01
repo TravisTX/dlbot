@@ -8,9 +8,11 @@ namespace DlBot
     internal class Service
     {
         private IWebHost _webHost;
+        private BotUser _botUser;
 
-        public Service()
+        public Service(BotUser botUser)
         {
+            _botUser = botUser;
         }
 
         public bool Start(HostControl hostControl)
@@ -24,6 +26,10 @@ namespace DlBot
                 .Build();
 
             _webHost.Start();
+
+            Serilog.Log.Information($"Starting Bot User");
+            _botUser.Init();
+
             return true;
         }
 
