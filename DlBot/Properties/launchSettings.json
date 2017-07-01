@@ -18,10 +18,12 @@
     },
     "DlBot": {
       "commandName": "Project",
-      "launchUrl": "http://localhost:5000/api/values",
+      "launchBrowser": true,
+      "launchUrl": "api/values",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
-      }
+      },
+      "applicationUrl": "http://localhost:8463"
     }
   }
 }
