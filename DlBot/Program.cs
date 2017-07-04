@@ -17,7 +17,7 @@ namespace DlBot
             Serilog.Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Information()
                 .Enrich.FromLogContext()
-                .WriteTo.RollingFile(Path.Combine("logs", "log-{Date}.txt"))
+                .WriteTo.RollingFile(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logs", "log-{Date}.txt"))
                 .WriteTo.ColoredConsole()
                 .CreateLogger();
 
