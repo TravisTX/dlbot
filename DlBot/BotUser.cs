@@ -46,6 +46,7 @@ namespace DlBot
                 HandleReactionTrigger(message, client, $"({client.MySelf.id}|{client.MySelf.name})", "wave");
                 var sadRegex = "(:disappointed:|:feelsbadman:|:angry:|:anguished:|:unamused:|:worried:|:angry:|:rage:|:slightly_frowning_face:|:white_frowning_face:|:scream:|:fearful:|:frowning:|:cry:|:disappointed_relieved:|:sob:|:face_with_head_bandage:|:scream_cat:|:crying_cat_face:|:pouting_cat:|:middle_finger:)";
                 HandleReactionTrigger(message, client, sadRegex, "hugging_face");
+                HandleReactionTrigger(message, client, "(octopus)", "octopus");
             };
             clientReady.Wait();
         }
