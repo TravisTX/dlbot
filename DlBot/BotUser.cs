@@ -2,6 +2,7 @@
 using DlBot.Services;
 using Microsoft.Extensions.Options;
 using SlackAPI;
+using SlackAPI.WebSocketMessages;
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
@@ -14,6 +15,7 @@ namespace DlBot
         private readonly SettingsModel _settings;
         private readonly SlackService _slackService;
         private readonly TfsService _tfsService;
+
         public BotUser(IOptions<SettingsModel> settings, SlackService slackService, TfsService tfsService)
         {
             _settings = settings.Value;
@@ -40,12 +42,15 @@ namespace DlBot
                 if (message.user == null || message.subtype == "bot_message")
                     return;
                 HandleTfsWorkitem(message, client);
-                HandleCheerUpTrigger(message, client);
+
+                HandleReactionTrigger(message, client, $"({client.MySelf.id}|{client.MySelf.name})", "wave");
+                var sadRegex = "(:disappointed:|:feelsbadman:|:angry:|:anguished:|:unamused:|:worried:|:angry:|:rage:|:slightly_frowning_face:|:white_frowning_face:|:scream:|:fearful:|:frowning:|:cry:|:disappointed_relieved:|:sob:|:face_with_head_bandage:|:scream_cat:|:crying_cat_face:|:pouting_cat:|:middle_finger:)";
+                HandleReactionTrigger(message, client, sadRegex, "hugging_face");
             };
             clientReady.Wait();
         }
 
-        private async void HandleTfsWorkitem(SlackAPI.WebSocketMessages.NewMessage message, SlackSocketClient client)
+        private async void HandleTfsWorkitem(NewMessage message, SlackSocketClient client)
         {
             var containsTfsTrigger = Regex.IsMatch(message.text, @"(tfs|bug|pbi|task)", RegexOptions.IgnoreCase);
             if (!containsTfsTrigger)
@@ -69,27 +74,31 @@ namespace DlBot
             }, message.channel, slackmessage, "dlbot");
         }
 
-        private void HandleCheerUpTrigger(SlackAPI.WebSocketMessages.NewMessage message, SlackSocketClient client)
+        private bool HandleReactionTrigger(NewMessage message, SlackSocketClient client, string regex, string emoji)
         {
-            var sadRegex = @"(:disappointed:|:feelsbadman:|:angry:|:anguished:|:unamused:|:worried:|:angry:|:rage:|:slightly_frowning_face:|:white_frowning_face:|:scream:|:fearful:|:frowning:|:cry:|:disappointed_relieved:|:sob:|:face_with_head_bandage:|:scream_cat:|:crying_cat_face:|:pouting_cat:|:middle_finger:)";
-            var containsSadTrigger = Regex.IsMatch(message.text, sadRegex, RegexOptions.IgnoreCase);
-            if (!containsSadTrigger)
-                return;
+            var containsTrigger = Regex.IsMatch(message.text, regex, RegexOptions.IgnoreCase);
+            if (!containsTrigger)
+                return false;
 
-            Serilog.Log.Information("Sadness detected");
+            addReaction(message, client, emoji);
+            return true;
+        }
+
+        private void addReaction(NewMessage message, SlackSocketClient client, string emoji)
+        {
             var ts = (message.ts.ToProperTimeStamp());
 
             client.AddReaction((rar) =>
             {
-                if (rar.error == "ok")
+                if (rar.ok)
                 {
-                    Serilog.Log.Information("Cheerup posted");
+                    Serilog.Log.Information($"reaction posted channel: {message.channel} emoji: {emoji}");
                 }
                 else
                 {
-                    Serilog.Log.Error($"Error posting Cheerup {rar.ok} {rar.error}");
+                    Serilog.Log.Error($"Error posting reaction {rar.ok}: {rar.error}");
                 }
-            }, "hugging_face", message.channel, ts.ToString());
+            }, emoji, message.channel, ts.ToString());
         }
     }
 }
