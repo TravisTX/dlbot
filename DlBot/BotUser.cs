@@ -25,29 +25,44 @@ namespace DlBot
 
         public void Init()
         {
-            ManualResetEventSlim clientReady = new ManualResetEventSlim(false);
-            SlackSocketClient client = new SlackSocketClient(_settings.SlackBotUserToken);
-            client.Connect((connected) =>
+            try
             {
-                // This is called once the client has emitted the RTM start command
-                clientReady.Set();
-            }, () =>
-            {
-                // This is called once the RTM client has connected to the end point
-                Serilog.Log.Information("Bot user connected");
-            });
 
-            client.OnMessageReceived += (message) =>
-            {
-                if (message.user == null || message.subtype == "bot_message")
-                    return;
-                HandleTfsWorkitem(message, client);
+                ManualResetEventSlim clientReady = new ManualResetEventSlim(false);
+                SlackSocketClient client = new SlackSocketClient(_settings.SlackBotUserToken);
+                client.Connect((connected) =>
+                {
+                    // This is called once the client has emitted the RTM start command
+                    clientReady.Set();
+                }, () =>
+                {
+                    // This is called once the RTM client has connected to the end point
+                    Serilog.Log.Information("Bot user connected");
+                });
 
-                HandleReactionTrigger(message, client, $"({client.MySelf.id}|{client.MySelf.name})", "wave");
-                var sadRegex = "(:disappointed:|:feelsbadman:|:angry:|:anguished:|:unamused:|:worried:|:angry:|:rage:|:slightly_frowning_face:|:white_frowning_face:|:scream:|:fearful:|:frowning:|:cry:|:disappointed_relieved:|:sob:|:face_with_head_bandage:|:scream_cat:|:crying_cat_face:|:pouting_cat:|:middle_finger:)";
-                HandleReactionTrigger(message, client, sadRegex, "hugging_face");
-            };
-            clientReady.Wait();
+                client.OnMessageReceived += (message) =>
+                {
+                    try
+                    {
+                        if (message.user == null || message.subtype == "bot_message")
+                            return;
+                        HandleTfsWorkitem(message, client);
+
+                        HandleReactionTrigger(message, client, $"({client.MySelf.id}|{client.MySelf.name})", "wave");
+                        var sadRegex = "(:disappointed:|:feelsbadman:|:angry:|:anguished:|:unamused:|:worried:|:angry:|:rage:|:slightly_frowning_face:|:white_frowning_face:|:scream:|:fearful:|:frowning:|:cry:|:disappointed_relieved:|:sob:|:face_with_head_bandage:|:scream_cat:|:crying_cat_face:|:pouting_cat:|:middle_finger:)";
+                        HandleReactionTrigger(message, client, sadRegex, "hugging_face");
+                    }
+                    catch (Exception ex)
+                    {
+                        Serilog.Log.Error(ex, "OnMessageRecieved");
+                    }
+                };
+                clientReady.Wait();
+            }
+            catch (Exception ex)
+            {
+                Serilog.Log.Error(ex, "init");
+            }
         }
 
         private async void HandleTfsWorkitem(NewMessage message, SlackSocketClient client)
